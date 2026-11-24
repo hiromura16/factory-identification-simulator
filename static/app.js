@@ -361,7 +361,17 @@ function control(
   return box;
 }
 /* 生成設定の編集領域を現在specから作り直す。DOMのみ置き換え、サーバーへ保存しない。 */
+// 設定編集中は、以前のサンプルを現在の設定として見せない。
+let previewRevision = 0;
+function invalidatePreview() {
+  previewRevision++;
+  $("#readerRoute").hidden = true;
+  $("#previewTable").replaceChildren();
+  $("#result").textContent = "";
+}
+
 function render() {
+  invalidatePreview();
   const target = $("#editor");
   target.replaceChildren();
   const area = el("div", { class: "card grid" });
@@ -565,6 +575,8 @@ async function init() {
           tab(x.dataset.tab)),
     );
   $("#presetSelect").onchange = description;
+  for (const event of ["input", "change"])
+    $("#specForm").addEventListener(event, invalidatePreview);
   action(
     "#loadPreset",
     /* 選択プリセットを複製して編集欄へ読み込む。開始要求は送らないので、実行中の設定はここでは変えない。 */ () => {
@@ -582,7 +594,10 @@ async function init() {
     "#preview",
     /* フォーム検証後にプレビュー要求を送り、レコード・異常注入結果・応答JSONを表示する。実際の開始要求は行わない。 */ async () => {
       validated("#specForm");
+      const draft = JSON.stringify(spec);
+      const revision = previewRevision;
       const v = await api("/api/preview", spec);
+      if (revision !== previewRevision || draft !== JSON.stringify(spec)) return;
       table(
         $("#previewTable"),
         v.records.map(
@@ -595,6 +610,18 @@ async function init() {
           }),
         ),
       );
+      const route = v.reader_route_preview;
+      if (route) {
+        $("#readerRoute").hidden = false;
+        $("#readerRouteNote").textContent =
+          route.reader_count + "か所のうち先頭" + route.checkpoints.length +
+          "か所。読み飛ばしや重複配送を適用する前の生成例です。";
+        table($("#readerRouteTable"), route.checkpoints.map((point) => ({
+          生成位置: point.sequence, 設定読取機: point.configured_reader,
+          出力読取機: point.event.reader_id, タグ: point.event.tag_id,
+          方向: point.event.direction, 作業者: point.event.operator_id,
+        })));
+      }
       $("#result").textContent = JSON.stringify(v, null, 2);
       notice("プレビューしました。書き込み・公開・送信はしていません。");
     },
