@@ -461,6 +461,30 @@ def create_app(kind):
         offsets = sorted({0, 1, 2, *sample_offsets(spec.generator)})[:12]
         records = []
         hits = []
+        driver = None
+        route = None
+        if kind in {"logs", "identification"}:
+            from drivers import EventDriver
+
+            preview_controller = Controller(kind, store)
+            preview_controller.spec = spec
+            driver = EventDriver(preview_controller)
+        if kind == "identification":
+            options = spec.identification
+            # 各読取機の先頭で同じタグを追う。実行の所有状態は変更しない。
+            checkpoints = []
+            for index, configured in enumerate(options.readers[:8]):
+                sequence = index * options.tags
+                event = driver.event(sequence)
+                checkpoints.append({
+                    "sequence": sequence,
+                    "configured_reader": configured,
+                    "event": {
+                        key: event[key] for key in
+                        ("reader_id", "tag_id", "direction", "operator_id")
+                    },
+                })
+            route = {"reader_count": len(options.readers), "checkpoints": checkpoints}
         for offset in offsets:
             trace = []
             row = generate_record(
@@ -468,12 +492,7 @@ def create_app(kind):
                 spec.generator.start_sequence + offset,
                 trace=trace,
             )
-            if kind in {"logs", "identification"}:
-                from drivers import EventDriver
-
-                preview_controller = Controller(kind, store)
-                preview_controller.spec = spec
-                driver = EventDriver(preview_controller)
+            if driver is not None:
                 row = driver.event(offset)
                 if kind == "logs":
                     row["_formatted_log"] = driver.log_message(row, offset)
@@ -485,6 +504,7 @@ def create_app(kind):
             "sequences": offsets,
             "writes": False,
             "validated_spec": spec.model_dump(mode="json"),
+            **({"reader_route_preview": route} if route is not None else {}),
         }
 
     # 設定をコントローラーへ渡してバックグラウンド実行を開始する。
