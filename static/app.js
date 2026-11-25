@@ -450,14 +450,17 @@ function description() {
 /* フォーム内の制約違反を探す。該当箇所のdetailsを開いてブラウザーの検証表示を出し、例外で後続操作を止める。 */
 function validated(
   selector,
+  showError = true,
 ) {
   for (const input of $(selector).querySelectorAll("input,select,textarea"))
     if (!input.checkValidity()) {
-      for (let details = input.closest("details"); details;
-        details = details.parentElement.closest("details")) {
-        details.open = true;
+      if (showError) {
+        for (let details = input.closest("details"); details;
+          details = details.parentElement.closest("details")) {
+          details.open = true;
+        }
+        input.reportValidity();
       }
-      input.reportValidity();
       throw new Error("入力を確認してください");
     }
 }
@@ -606,6 +609,24 @@ async function init() {
   render();
   profile = cleanProfile(profiles[0]);
   renderProfile();
+  window.FactoryComparison.mount({
+    app: "identification-simulator",
+    listPresets: () => presets,
+    currentSpec: () => {
+      validated("#specForm", false);
+      return copy(spec);
+    },
+    preview: (candidate) => api("/api/preview", candidate),
+    metrics: (spec, data) => ({
+      "ラベルの方式": spec.identification.barcode,
+      "タグ数": spec.identification.tags,
+      "読取機の設定数": spec.identification.readers.length,
+      "見本の通過地点数": data.reader_route_preview?.checkpoints.length ?? null,
+      "二重読みを発生させる間隔": spec.identification.duplicate_every,
+      "読み飛ばしを発生させる間隔": spec.identification.drop_every,
+      "予定外の読取機を出す間隔": spec.identification.wrong_reader_every,
+    }),
+  });
   document
     .querySelectorAll("[data-tab]")
     .forEach(
