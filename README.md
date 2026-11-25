@@ -17,6 +17,8 @@ RFIDのRF無線、LLRP、実スキャナーのUSB/HID、GS1の業務ルール全
 
 ## 操作ガイド
 
+[ひな型の選び方・詳細設定の画面・自分のひな型の作り方](docs/preset-guide.md)
+
 [![タグの種類数、読取経路の見本とイベント生成開始を示す識別画面。青い枠は詳細設定。](docs/images/operation-guide.png)](docs/images/operation-guide.png)
 
 1. RFIDやバーコードのひな型を読み込みます。
