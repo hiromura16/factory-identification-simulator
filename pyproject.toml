@@ -1,8 +1,8 @@
 # Python対象バージョン・依存関係・テスト探索条件。インストール時はuv.lockと合わせて使う。
 [project]
 name = "factory-identification-simulator"
-version = "0.1.0"
-requires-python = ">=3.12,<3.14"
+version = "0.3.0"
+requires-python = ">=3.12,<3.15"
 dependencies = [
     "fastapi==0.121.2",
     "uvicorn==0.38.0",

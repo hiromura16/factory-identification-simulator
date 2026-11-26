@@ -2,7 +2,7 @@
 // 編集状態はブラウザー内、実行状態と永続化はサーバー側が管理する。
 "use strict";
 const $ =
-    /* CSSセレクターから最初の要素を取得する。該当なしはnullで、呼出側は画面に必須要素があることを前提とする。 */ (
+    (
       s,
     ) => document.querySelector(s),
   copy =
@@ -40,7 +40,7 @@ async function api(
   path,
   body,
 ) {
-  const r = await fetch(
+  const r = await fetchWithOperationConfirmation(
     path,
     body === undefined
       ? {}
@@ -50,12 +50,9 @@ async function api(
           body: JSON.stringify(body),
         },
   );
-  const v = await r.json();
-  if (!r.ok)
-    throw new Error(
-      typeof v.detail === "string" ? v.detail : JSON.stringify(v.detail || v),
-    );
-  return v;
+  const data = await readApiJson(r);
+  showPreviewWarnings(path, data);
+  return data;
 }
 /* 指定ボタンへ非同期処理を登録する。処理中の二重操作を防ぎ、失敗通知とボタン復帰を共通化する。 */
 function action(
@@ -63,7 +60,7 @@ function action(
   fn,
 ) {
   $(id).onclick =
-    /* クリックの既定動作を抑えてボタンを一時無効化し、渡された処理を待つ。例外は画面表示し、成否に関係なくfinallyで再有効化する。 */ async (
+    async (
       e,
     ) => {
       e.preventDefault();
@@ -724,8 +721,9 @@ async function init() {
     },
   );
   /* JSON欄を解析してプレビューAPIで検証し、正規化された設定を返す。JSON構文・API検証エラーは呼出側へ伝える。 */
-  async function fromJson(draft = JSON.parse($("#jsonText").value)) {
-    return (await api("/api/preview", draft)).validated_spec;
+  async function fromJson(draft = readPresetJson($("#jsonText").value), compact = false) {
+    const preview = await api("/api/preview", draft);
+    return compact ? preview.compact_spec : preview.validated_spec;
   }
   action(
     "#applyJson",
@@ -742,7 +740,7 @@ async function init() {
       const id = $("#presetId").value;
       if (!/^[A-Za-z0-9_-]{1,64}$/.test(id))
         throw new Error("プリセットIDを確認してください");
-      const draft = JSON.parse($("#jsonText").value);
+      const draft = readPresetJson($("#jsonText").value);
       const displayName = $("#presetDisplayName").value.trim();
       const purpose = $("#presetPurpose").value.trim();
       if (displayName) draft.name = displayName;
@@ -760,7 +758,7 @@ async function init() {
   action(
     "#exportJson",
     /* JSON欄の検証済み設定を指定IDのファイル名でダウンロードする。 */ async () =>
-      download(await fromJson(), $("#presetId").value + ".json"),
+      download(await fromJson(undefined, $("#compactExport").checked), $("#presetId").value + ".json"),
   );
   $("#importJson").onchange =
     /* 選択ファイルの2MiB制限を確認してJSON欄へ読み込み、サーバー検証後にフォームへ反映する。失敗は通知し、保存はしない。 */ async (
