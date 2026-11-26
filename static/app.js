@@ -40,7 +40,7 @@ async function api(
   path,
   body,
 ) {
-  const r = await fetch(
+  const r = await fetchWithOperationConfirmation(
     path,
     body === undefined
       ? {}
@@ -50,7 +50,9 @@ async function api(
           body: JSON.stringify(body),
         },
   );
-  return readApiJson(r);
+  const data = await readApiJson(r);
+  showPreviewWarnings(path, data);
+  return data;
 }
 /* 指定ボタンへ非同期処理を登録する。処理中の二重操作を防ぎ、失敗通知とボタン復帰を共通化する。 */
 function action(

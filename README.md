@@ -27,6 +27,8 @@ DATA_DIR=./data uv run --frozen uvicorn app:app --host 127.0.0.1 --port 3644
 - [初心者マニュアル](docs/user-manual.md) · [ひな型を選ぶ・作る](docs/preset-guide.md) · [付属のひな型一覧](presets/README.md)
 - [設定リファレンス](docs/settings-reference.md) · [JSONの書き方](docs/template-guide.md) · [AI向け作成ハーネス](docs/AI_TEMPLATE_HARNESS.md)
 - [APIの使い方](docs/api-guide.md) · [用語集](docs/glossary.md) · [コードを拡張する](docs/code-reading-guide.md) · [変更履歴](CHANGELOG.md) · [レビュー対応表](docs/quality-review.md)
+AIクライアント向けの接続方法は[CLI・MCPの使い方](docs/mcp.md)を参照してください。
+
 
 材料・仕掛品・作業者の通過、所在、投入、検品を読取イベントとして再現します。tag_id、96bit表記のEPC、reader_id、operator_id、lot_id、direction、チェックディジット付きEAN13、event_idを生成。作業者名は架空の識別子です。
 
@@ -98,7 +100,7 @@ DATA_DIRにはsettings.sqlite3、source.key、connection-files、永続データ
 
 ホストメモリ余力（既定6GiB）、ディスク余力2GiB、storage_limit_mbを監視し、閾値で生成を停止します。Composeは既定512MiB/1CPU、非root、read-only root、ログ上限、負荷ガード連携用のラベルを設定。`storage_limit_mb`はDATA_DIR配下の上限で、別マウントのログはローテーションで制限します。
 
-`uv run pytest -q`と`uvx ruff check .`で検証。[検証記録](VALIDATION.json)に実接続と画面確認の範囲を記載しています。他ソースとの組み合わせとポート割り当ての参考例は[構成メモ](docs/architecture.md)を参照してください。実環境の接続情報は非公開の運用メモで管理してください。
+`uv run pytest -q`と`uvx ruff@0.17.6 check --select E4,E7,E9,F .`で検証。[検証記録](VALIDATION.json)に実接続と画面確認の範囲を記載しています。他ソースとの組み合わせとポート割り当ての参考例は[構成メモ](docs/architecture.md)を参照してください。実環境の接続情報は非公開の運用メモで管理してください。
 
 ## 外部監視用の管理ラベル
 
