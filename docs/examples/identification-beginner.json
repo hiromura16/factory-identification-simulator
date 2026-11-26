@@ -1,0 +1,52 @@
+{
+  "name": "組立ラインRFID / 5工程 / 二重読取あり",
+  "description": "【想定】仕掛品タグが5つのゲートを順に通過する。\n【異常】50件ごとに同じ読取（同じevent_id）を再送する。",
+  "interval_ms": 1000,
+  "batch_size": 5,
+  "generator": {
+    "run_key": "rfid-assembly-001",
+    "seed": 13,
+    "fields": [
+      {
+        "name": "id",
+        "data_type": "string",
+        "generator": "record_id",
+        "primary_key": true,
+        "length": 64
+      },
+      {
+        "name": "rssi_dbm",
+        "data_type": "integer",
+        "generator": "integer",
+        "minimum": -70,
+        "maximum": -40
+      },
+      {
+        "name": "read_at",
+        "data_type": "datetime",
+        "generator": "timestamp",
+        "start": "2026-12-01T08:00:00+09:00",
+        "step": 2
+      }
+    ]
+  },
+  "identification": {
+    "tags": 200,
+    "readers": [
+      "GATE-IN",
+      "WELD",
+      "PAINT",
+      "ASSEMBLY",
+      "GATE-OUT"
+    ],
+    "operators": [
+      "WORKER-001",
+      "WORKER-002",
+      "WORKER-003",
+      "WORKER-004"
+    ],
+    "barcode": "code128",
+    "duplicate_every": 50
+  },
+  "max_ticks": 2
+}
