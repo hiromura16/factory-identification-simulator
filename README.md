@@ -1,6 +1,6 @@
 # 作業者・RFID・バーコード模擬
 
-[プリセット一覧](presets/README.md) · [Dokploy配備手順](docs/dokploy-deploy.md) · [コード読解ガイド](docs/code-reading-guide.md)
+[プリセット一覧](presets/README.md) · [アプリ別マニュアル](docs/user-manual.md) · [VMへのDocker Compose導入手順](docs/vm-compose.md) · [コード読解ガイド](docs/code-reading-guide.md)
 
 材料・仕掛品・作業者の通過、所在、投入、検品を読取イベントとして再現します。tag_id、96bit表記のEPC、reader_id、operator_id、lot_id、direction、チェックディジット付きEAN13、event_idを生成。作業者名は架空の識別子です。
 
@@ -11,7 +11,7 @@
 
 ラベル番号は0〜tags-1。Code128/QRはTAG-000000形式、EAN13は490000000000を基準にチェックディジットを計算します。任意のtag_id項目を上書きする場合、標準ラベルAPIのタグとは別になるため、受信試験のキーを合わせてください。
 
-再開位置とoutboxを永続化し、再起動後に同じ位置から継続します。MQTTはブローカーPUBACK、HTTPは2xxまでが受付判定で、下流保存の完了保証ではありません。通信とDB更新が分かれるため重複し得ます。pendingは配送先のfingerprint単位で保持し、別の送信先へ自動転送しません。
+再開位置とoutboxを永続化し、再起動後は、同じ設定で手動開始すると保存した位置から継続します。MQTTはブローカーPUBACK、HTTPは2xxまでが受付判定で、下流保存の完了保証ではありません。通信とDB更新が分かれるため重複し得ます。pendingは配送先のfingerprint単位で保持し、別の送信先へ自動転送しません。
 
 RFIDのRF無線、LLRP、実スキャナーのUSB/HID、GS1の業務ルール全般は実装していません。模擬するのは取り込み側が受け取るイベントとラベルです。
 
@@ -57,10 +57,10 @@ docker compose up -d --build
 `.env`のAPP_PORTが画面のポート、BIND_IPは既定127.0.0.1。管理画面と操作APIはログイン不要です。直接起動する場合:
 
 ```sh
-DATA_DIR="$PWD/data" AUTO_START=1 uv run uvicorn app:app --host 127.0.0.1 --port 8080 --workers 1
+DATA_DIR="$PWD/data" uv run uvicorn app:app --host 127.0.0.1 --port 8080 --workers 1
 ```
 
-1アプリ1プロセス・1実行。AUTO_START=1は初回に既定プリセットを開始。その後は保存済みの停止・実行状態を復元します。Docker再作成後もnamed volumeへ設定・データを保持。初期設定は小規模で、速度は保証値ではありません。interval_ms、batch_size、タグ/設備/件数等を増やす場合も、CPU・メモリ・容量上限を合わせて設定してください。
+1アプリ1プロセス・1実行。起動後は停止状態で、画面または操作APIからの開始を待ちます。Docker再作成後もnamed volumeへ設定・データを保持。初期設定は小規模で、速度は保証値ではありません。interval_ms、batch_size、タグ/設備/件数等を増やす場合も、CPU・メモリ・容量上限を合わせて設定してください。
 
 ## 認証・データと運用
 
