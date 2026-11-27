@@ -4,8 +4,8 @@ name = "factory-identification-simulator"
 version = "0.3.0"
 requires-python = ">=3.12,<3.15"
 dependencies = [
-    "fastapi==0.121.2",
-    "uvicorn==0.38.0",
+    "fastapi==0.165.0",
+    "uvicorn==0.54.0",
     "cryptography>=46,<50",
     "pillow>=12,<14",
     "paho-mqtt>=2.1,<3",
